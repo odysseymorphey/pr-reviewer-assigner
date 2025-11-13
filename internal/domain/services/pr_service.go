@@ -1,0 +1,34 @@
+package services
+
+import (
+	"pr-reviwer-assigner/internal/domain/dto"
+	"pr-reviwer-assigner/internal/domain/repository"
+)
+
+type PRService interface {
+	Create(in dto.PRRequest)
+	Merge()
+	Reassign()
+}
+
+type prService struct {
+	repo repository.PRRepo
+}
+
+func NewPRService(repo repository.PRRepo) PRService {
+	return &prService{
+		repo: repo,
+	}
+}
+
+func (s *prService) Create(in dto.PRRequest) {
+
+}
+
+func (s *prService) Merge() {
+
+}
+
+func (s *prService) Reassign() {
+
+}

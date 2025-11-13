@@ -1,0 +1,11 @@
+{
+    "http_addr": ":8080",
+    "db": {
+        "host": "localhost",
+        "port": "5432",
+        "user": "postgres",
+        "password": "mysecretpassword",
+        "name": "postgres",
+        "sslmode": "disable"
+    }
+}
