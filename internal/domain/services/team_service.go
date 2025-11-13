@@ -6,8 +6,8 @@ import (
 )
 
 type TeamService interface {
-	Add(dto.Team) error
-	Get() (dto.Team, error)
+	Add(team dto.Team) error
+	Get(teamName string) (dto.Team, error)
 }
 
 type teamService struct {
@@ -22,6 +22,6 @@ func (t *teamService) Add(team dto.Team) error {
 	return nil
 }
 
-func (t *teamService) Get() (dto.Team, error) {
+func (t *teamService) Get(teamName string) (dto.Team, error) {
 	return dto.Team{}, nil
 }

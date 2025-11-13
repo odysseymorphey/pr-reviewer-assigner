@@ -9,7 +9,7 @@ type prRepo struct {
 	db *sql.DB
 }
 
-func NewPRRepository(db *sql.DB) repository.PRRepo {
+func NewPRRepository(db *sql.DB) repository.PRRepository {
 	return &prRepo{
 		db: db,
 	}

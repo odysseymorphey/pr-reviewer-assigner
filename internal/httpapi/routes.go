@@ -8,26 +8,20 @@ import (
 )
 
 func RegisterRoutes(r *fiber.App, c *di.Container) {
+	teamHandler := handlers.NewTeamHandler(c.GetTeamService())
+	userHandler := handlers.NewUserHandler(c.GetUserService())
 	prHandler := handlers.NewPRHandler(c.GetPRService())
 
 	// TEAM
 	{
-		r.Get("/team/get", func(ctx fiber.Ctx) error {
-			return nil
-		})
-		r.Post("/team/add", func(ctx fiber.Ctx) error {
-			return nil
-		})
+		r.Get("/team/get", teamHandler.Get)
+		r.Post("/team/add", teamHandler.Add)
 	}
 
 	// USERS
 	{
-		r.Post("/users/setIsActive", func(ctx fiber.Ctx) error {
-			return nil
-		})
-		r.Get("/users/getReview", func(ctx fiber.Ctx) error {
-			return nil
-		})
+		r.Post("/users/setIsActive", userHandler.SetIsActive)
+		r.Get("/users/getReview", userHandler.GetReview)
 	}
 
 	// PR

@@ -12,10 +12,10 @@ type PRService interface {
 }
 
 type prService struct {
-	repo repository.PRRepo
+	repo repository.PRRepository
 }
 
-func NewPRService(repo repository.PRRepo) PRService {
+func NewPRService(repo repository.PRRepository) PRService {
 	return &prService{
 		repo: repo,
 	}

@@ -17,11 +17,10 @@ type PR struct {
 }
 
 type PRShort struct {
-	ID        string   `json:"pull_request_id"`
-	Name      string   `json:"pull_request_name"`
-	AuthorID  string   `json:"author_id"`
-	Status    string   `json:"status"`
-	Reviewers []string `json:"assigned_reviewers"`
+	ID       string `json:"pull_request_id"`
+	Name     string `json:"pull_request_name"`
+	AuthorID string `json:"author_id"`
+	Status   string `json:"status"`
 }
 
 type PRResponse struct {

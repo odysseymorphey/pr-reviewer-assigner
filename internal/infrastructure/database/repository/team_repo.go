@@ -14,10 +14,12 @@ func NewTeamRepository(db *sql.DB) repository.TeamRepository {
 	return &teamRepo{}
 }
 
-func (t *teamRepo) Get() (dto.Team, error) {
+func (r *teamRepo) Get(teamName string) (dto.Team, error) {
+	const query = ``
+
 	return dto.Team{}, nil
 }
 
-func (t *teamRepo) Add(team dto.Team) error {
+func (r *teamRepo) Add(team dto.Team) error {
 	return nil
 }

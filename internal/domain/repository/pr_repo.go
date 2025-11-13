@@ -1,6 +1,6 @@
 package repository
 
-type PRRepo interface {
+type PRRepository interface {
 	Create()
 	Merge()
 	Reassign()
