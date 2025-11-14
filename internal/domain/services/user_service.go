@@ -6,8 +6,8 @@ import (
 )
 
 type UserService interface {
-	GetReview(userID string) (dto.UserPR, error)
-	SetIsActive(user dto.User) (dto.UserResponse, error)
+	GetReview(userID string) ([]dto.PRShort, error)
+	SetIsActive(req dto.SIARequest) (*dto.User, error)
 }
 
 type userService struct {
@@ -20,10 +20,15 @@ func NewUserService(repo repository.UserRepository) UserService {
 	}
 }
 
-func (s *userService) GetReview(userID string) (dto.UserPR, error) {
+func (s *userService) GetReview(userID string) ([]dto.PRShort, error) {
 	return s.repo.GetReview(userID)
 }
 
-func (s *userService) SetIsActive(user dto.User) (dto.UserResponse, error) {
-	return s.repo.SetIsActive(user)
+func (s *userService) SetIsActive(user dto.SIARequest) (*dto.User, error) {
+	u, err := s.repo.SetIsActive(user)
+	if err != nil {
+		return nil, err
+	}
+
+	return u, nil
 }

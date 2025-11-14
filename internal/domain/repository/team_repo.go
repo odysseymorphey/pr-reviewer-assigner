@@ -1,8 +1,11 @@
 package repository
 
-import "pr-reviwer-assigner/internal/domain/dto"
+import (
+	"context"
+	"pr-reviwer-assigner/internal/domain/dto"
+)
 
 type TeamRepository interface {
-	Add(team dto.Team) error
-	Get(teamName string) (dto.Team, error)
+	Add(ctx context.Context, team dto.Team) error
+	Get(teamName string) ([]dto.TeamMember, error)
 }

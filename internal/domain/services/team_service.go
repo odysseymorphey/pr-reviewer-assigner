@@ -1,13 +1,14 @@
 package services
 
 import (
+	"context"
 	"pr-reviwer-assigner/internal/domain/dto"
 	"pr-reviwer-assigner/internal/domain/repository"
 )
 
 type TeamService interface {
-	Add(team dto.Team) error
-	Get(teamName string) (dto.Team, error)
+	Add(ctx context.Context, team dto.Team) error
+	Get(teamName string) ([]dto.TeamMember, error)
 }
 
 type teamService struct {
@@ -15,13 +16,15 @@ type teamService struct {
 }
 
 func NewTeamService(repo repository.TeamRepository) TeamService {
-	return &teamService{}
+	return &teamService{
+		repo: repo,
+	}
 }
 
-func (t *teamService) Add(team dto.Team) error {
-	return nil
+func (s *teamService) Add(ctx context.Context, team dto.Team) error {
+	return s.repo.Add(ctx, team)
 }
 
-func (t *teamService) Get(teamName string) (dto.Team, error) {
-	return dto.Team{}, nil
+func (s *teamService) Get(teamName string) ([]dto.TeamMember, error) {
+	return s.repo.Get(teamName)
 }

@@ -20,8 +20,8 @@ CREATE TABLE pull_requests (
         ON UPDATE CASCADE
         ON DELETE RESTRICT,
     status            pull_request_status NOT NULL,
-    created_at        TIMESTAMPTZ,
-    merged_at         TIMESTAMPTZ
+    created_at        TEXT NOT NULL,
+    merged_at         TEXT
 );
 
 CREATE TABLE pull_request_reviewers (

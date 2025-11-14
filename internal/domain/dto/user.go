@@ -15,3 +15,8 @@ type UserPR struct {
 type UserResponse struct {
 	User User `json:"user"`
 }
+
+type SIARequest struct {
+	ID       string `json:"user_id"`
+	IsActive bool   `json:"is_active"`
+}
