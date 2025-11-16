@@ -17,14 +17,11 @@
 export CONFIG_PATH=your/config/path.json
 ```
 
-Минимальные требования:
-- Go 1.25
-- PostgreSQL 15+
 
-### Makefile
+#### Makefile
 - `make build` - собирает бинарь `prservice`.
 - `make test` - запускает `go test ./...`.
-- `make lint` - после установки `golangci-lint` запускает линтеры (не забудьте поправить имя бинаря при необходимости).
+- `make lint` - после установки `golangci-lint` запускает линтеры (не забудьте поправить имя бинаря в Makefile при необходимости).
 - `make up` / `make down` - проксируют команды docker-compose.
 
 ### Docker Compose
