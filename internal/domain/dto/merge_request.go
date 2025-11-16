@@ -1,5 +1,5 @@
 package dto
 
 type MergeRequest struct {
-	PullRequestID string `json:"pull_request_id_id"`
+	PullRequestID string `json:"pull_request_id"`
 }

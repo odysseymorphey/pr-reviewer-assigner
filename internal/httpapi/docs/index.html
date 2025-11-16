@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <title>PR Reviewer Assigner API</title>
+    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist/swagger-ui.css" />
+    <style>
+      body {
+        margin: 0;
+        background: #f8f8f8;
+      }
+      .swagger-container {
+        margin: 0 auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="swagger-ui" class="swagger-container"></div>
+    <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-bundle.js"></script>
+    <script>
+      window.onload = () => {
+        SwaggerUIBundle({
+          url: '/docs/openapi.yml',
+          dom_id: '#swagger-ui',
+          presets: [SwaggerUIBundle.presets.apis],
+          layout: 'BaseLayout',
+        })
+      }
+    </script>
+  </body>
+</html>

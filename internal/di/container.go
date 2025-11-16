@@ -15,7 +15,7 @@ type Container struct {
 	teamService services.TeamService
 	userService services.UserService
 
-	logger *zap.SugaredLogger
+	logger *zap.Logger
 }
 
 func NewContainer(cfg *config.Config) *Container {
@@ -24,25 +24,21 @@ func NewContainer(cfg *config.Config) *Container {
 		log.Fatal(err)
 	}
 
-	zapLogger := zap.SugaredLogger{}
-
-	//prLog := zapLogger.Named("prService")
-	//teamLog := zapLogger.Named("teamService")
-	//userLog := zapLogger.Named("userService")
+	zapLogger, _ := zap.NewProduction()
 
 	prrepo := repo2.NewPRRepository(db)
 	teamrepo := repo2.NewTeamRepository(db)
 	userrepo := repo2.NewUserRepository(db)
 
 	prservice := services.NewPRService(prrepo)
-	teamservice := services.NewTeamService(teamrepo)
+	teamservice := services.NewTeamService(teamrepo, prrepo)
 	userservice := services.NewUserService(userrepo)
 
 	return &Container{
 		prService:   prservice,
 		teamService: teamservice,
 		userService: userservice,
-		logger:      &zapLogger,
+		logger:      zapLogger,
 	}
 }
 
@@ -59,5 +55,5 @@ func (c *Container) GetUserService() services.UserService {
 }
 
 func (c *Container) GetNamedLogger(name string) *zap.SugaredLogger {
-	return c.logger.Named(name)
+	return c.logger.Named(name).Sugar()
 }

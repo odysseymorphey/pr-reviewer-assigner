@@ -64,11 +64,15 @@ func (h *UserHandler) SetIsActive(c fiber.Ctx) error {
 
 	h.logger.Info("SetIsActive success: ", resp)
 
-	return c.Status(fiber.StatusOK).JSON(resp)
+	response := dto.UserResponse{
+		User: *resp,
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response)
 }
 
 func (h *UserHandler) GetReview(c fiber.Ctx) error {
-	userID := strings.TrimSpace(c.Params("user_id"))
+	userID := strings.TrimSpace(c.Query("user_id"))
 	if userID == "" {
 		h.logger.Error("empty user id")
 		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResponse{
@@ -79,10 +83,24 @@ func (h *UserHandler) GetReview(c fiber.Ctx) error {
 		})
 	}
 
-	// вот тут нужна проверка на отсутствуеюшего юзера
 	prs, err := h.userService.GetReview(userID)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResponse{})
+		switch {
+		case errors.Is(err, errors2.ErrNotFound):
+			return c.Status(fiber.StatusNotFound).JSON(dto.ErrorResponse{
+				Error: dto.Error{
+					Code:    errors2.ErrNotFound.Error(),
+					Message: "resource not found",
+				},
+			})
+		default:
+			return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResponse{
+				Error: dto.Error{
+					Code:    errors2.ErrInternal.Error(),
+					Message: "internal server error",
+				},
+			})
+		}
 	}
 
 	response := &dto.UserPR{

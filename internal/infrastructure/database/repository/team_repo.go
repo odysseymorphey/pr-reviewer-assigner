@@ -3,8 +3,10 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"pr-reviwer-assigner/internal/domain/dto"
 	"pr-reviwer-assigner/internal/domain/repository"
+	errors2 "pr-reviwer-assigner/internal/errors"
 )
 
 type teamRepo struct {
@@ -42,6 +44,24 @@ func (r *teamRepo) Get(teamName string) ([]dto.TeamMember, error) {
 		members = append(members, member)
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	if len(members) == 0 {
+		const existsQuery = `SELECT 1 FROM teams WHERE team_name = $1`
+		var dummy int
+		err = r.db.QueryRow(existsQuery, teamName).Scan(&dummy)
+		if err != nil {
+			switch {
+			case errors.Is(err, sql.ErrNoRows):
+				return nil, errors2.ErrNotFound
+			default:
+				return nil, err
+			}
+		}
+	}
+
 	return members, nil
 }
 
@@ -64,6 +84,14 @@ func (r *teamRepo) Add(ctx context.Context, team dto.Team) error {
 		`INSERT INTO teams (team_name) VALUES ($1)`,
 		team.Name,
 	)
+	if err != nil {
+		switch {
+		case isUniqueViolation(err):
+			return errors2.ErrTeamExists
+		default:
+			return err
+		}
+	}
 
 	for _, m := range team.Members {
 		if _, err := tx.ExecContext(ctx,
@@ -74,6 +102,45 @@ func (r *teamRepo) Add(ctx context.Context, team dto.Team) error {
 			m.IsActive,
 		); err != nil {
 			return err
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *teamRepo) DeactivateMembers(ctx context.Context, teamName string, userIDs []string) error {
+	if len(userIDs) == 0 {
+		return nil
+	}
+
+	const query = `
+		UPDATE users
+		   SET is_active = FALSE
+		 WHERE user_id = $1
+		   AND team_name = $2
+	`
+
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	for _, id := range userIDs {
+		res, err := tx.ExecContext(ctx, query, id, teamName)
+		if err != nil {
+			return err
+		}
+		affected, err := res.RowsAffected()
+		if err != nil {
+			return err
+		}
+		if affected == 0 {
+			return errors2.ErrNotFound
 		}
 	}
 

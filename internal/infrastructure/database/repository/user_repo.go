@@ -2,8 +2,10 @@ package repository
 
 import (
 	"database/sql"
+	"errors"
 	"pr-reviwer-assigner/internal/domain/dto"
 	"pr-reviwer-assigner/internal/domain/repository"
+	errors2 "pr-reviwer-assigner/internal/errors"
 )
 
 type userRepo struct {
@@ -52,27 +54,48 @@ func (s *userRepo) GetReview(userID string) ([]dto.PRShort, error) {
 		prs = append(prs, pr)
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	if len(prs) == 0 {
+		const userExists = `SELECT 1 FROM users WHERE user_id = $1`
+		var dummy int
+		err = s.db.QueryRow(userExists, userID).Scan(&dummy)
+		if err != nil {
+			switch {
+			case errors.Is(err, sql.ErrNoRows):
+				return nil, errors2.ErrNotFound
+			default:
+				return nil, err
+			}
+		}
+	}
+
 	return prs, nil
 }
 
 func (s *userRepo) SetIsActive(req dto.SIARequest) (*dto.User, error) {
-	const setIsActive = `UPDATE users SET is_active = $1 WHERE user_id = $2`
-	const getUser = `SELECT * FROM users WHERE user_id = $1`
-
-	_, err := s.db.Exec(setIsActive, req.IsActive, req.ID)
-	if err != nil {
-		return nil, err
-	}
-
+	const setIsActive = `
+		UPDATE users
+		   SET is_active = $1
+		 WHERE user_id   = $2
+		RETURNING user_id, username, team_name, is_active
+	`
 	var user dto.User
-	err = s.db.QueryRow(getUser, user.ID).Scan(
+	err := s.db.QueryRow(setIsActive, req.IsActive, req.ID).Scan(
 		&user.ID,
 		&user.Name,
 		&user.Team,
 		&user.IsActive,
 	)
 	if err != nil {
-		return nil, err
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, errors2.ErrNotFound
+		default:
+			return nil, err
+		}
 	}
 
 	return &user, nil

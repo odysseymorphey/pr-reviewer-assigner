@@ -13,13 +13,32 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
     networks:
-      - app-network
+      - api-network
 
+  k6:
+    build:
+      context: .
+      dockerfile: ./docker/k6/Dockerfile
+    container_name: k6
+    volumes:
+      - ./k6/scripts:/scripts
+      - ./k6/reports:/reports
+    depends_on:
+      - api
+    networks:
+      - api-network
+    command: [
+      "run",
+      "/scripts/test.js",
+      "--out",
+      "dashboard=export=/reports/dashboard.html"
+    ]
 
-  app:
+  api:
     build:
       context: .
       dockerfile: ./docker/app/Dockerfile
+    container_name: api
     depends_on:
       - postgres
     environment:
@@ -31,10 +50,10 @@ services:
     ports:
       - "8080:8080"
     networks:
-      - app-network
+      - api-network
 
 networks:
-  app-network:
+  api-network:
     driver: bridge
 
 volumes:

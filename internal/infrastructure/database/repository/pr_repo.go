@@ -78,10 +78,8 @@ func (s *prRepo) Create(ctx context.Context, req dto.PRRequest) ([]string, error
 	if err != nil {
 		switch {
 		case isUniqueViolation(err):
-			// todo: add logs
 			return nil, errors2.ErrPRExists
 		default:
-			// todo: add logs
 			return nil, err
 		}
 	}
@@ -99,25 +97,21 @@ func (s *prRepo) Create(ctx context.Context, req dto.PRRequest) ([]string, error
 	for rows.Next() {
 		var userID string
 		if err := rows.Scan(&userID); err != nil {
-			// todo: add logs
 			return nil, err
 		}
 		reviewers = append(reviewers, userID)
 	}
 	if err := rows.Err(); err != nil {
-		// todo: add logs
 		return nil, err
 	}
 
 	for _, id := range reviewers {
 		if _, err := tx.ExecContext(ctx, insertReviewerQuery, req.ID, id); err != nil {
-			// todo: add logs
 			return nil, err
 		}
 	}
 
 	if err := tx.Commit(); err != nil {
-		// todo: add logs
 		return nil, err
 	}
 
@@ -211,8 +205,7 @@ func (s *prRepo) Reassign(ctx context.Context, req dto.ReassignRequest) (*dto.PR
 
 	const oldUserQuery = `
 		SELECT 
-		    team_name,
-		    is_active
+		    team_name
 		FROM users
 		WHERE user_id = $1
 	`
@@ -224,12 +217,6 @@ func (s *prRepo) Reassign(ctx context.Context, req dto.ReassignRequest) (*dto.PR
 		    pull_request_id = $1
 			AND reviewer_id = $2
 	`
-
-	const authorTeamQuery = `
-		SELECT team_name
-  		FROM users
-	 	WHERE user_id = $1
- 	`
 
 	const findNewRevQuery = `
 		SELECT u.user_id
@@ -293,8 +280,7 @@ func (s *prRepo) Reassign(ctx context.Context, req dto.ReassignRequest) (*dto.PR
 	}
 
 	var oldUserTeam string
-	var oldUserActive bool
-	err = tx.QueryRowContext(ctx, oldUserQuery, req.OldUserID).Scan(&oldUserTeam, &oldUserActive)
+	err = tx.QueryRowContext(ctx, oldUserQuery, req.OldUserID).Scan(&oldUserTeam)
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
@@ -305,7 +291,7 @@ func (s *prRepo) Reassign(ctx context.Context, req dto.ReassignRequest) (*dto.PR
 	}
 
 	var dummy int
-	err = tx.QueryRowContext(ctx, checkOldUserQuery, req.OldUserID).Scan(&dummy)
+	err = tx.QueryRowContext(ctx, checkOldUserQuery, req.PullRequestID, req.OldUserID).Scan(&dummy)
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
@@ -315,19 +301,8 @@ func (s *prRepo) Reassign(ctx context.Context, req dto.ReassignRequest) (*dto.PR
 		}
 	}
 
-	var authorTeam string
-	err = tx.QueryRowContext(ctx, authorTeamQuery, oldUserTeam).Scan(&authorTeam)
-	if err != nil {
-		switch {
-		case errors.Is(err, sql.ErrNoRows):
-			return nil, "", errors2.ErrNotFound
-		default:
-			return nil, "", err
-		}
-	}
-
 	var newReviewerID string
-	err = tx.QueryRowContext(ctx, findNewRevQuery, authorTeam, pr.AuthorID, req.OldUserID, req.PullRequestID).Scan(&newReviewerID)
+	err = tx.QueryRowContext(ctx, findNewRevQuery, oldUserTeam, pr.AuthorID, req.OldUserID, req.PullRequestID).Scan(&newReviewerID)
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
@@ -337,7 +312,7 @@ func (s *prRepo) Reassign(ctx context.Context, req dto.ReassignRequest) (*dto.PR
 		}
 	}
 
-	_, err = tx.ExecContext(ctx, deleteOldRevQuery, req.PullRequestID, newReviewerID)
+	_, err = tx.ExecContext(ctx, deleteOldRevQuery, req.PullRequestID, req.OldUserID)
 	if err != nil {
 		return nil, "", err
 	}
@@ -381,4 +356,34 @@ func isUniqueViolation(err error) bool {
 		return pqErr.Code == "23505"
 	}
 	return false
+}
+
+func (s *prRepo) ListOpenAssignments(ctx context.Context, reviewerID string) ([]string, error) {
+	const query = `
+		SELECT pr.pull_request_id
+		FROM pull_requests pr
+		JOIN pull_request_reviewers prr ON prr.pull_request_id = pr.pull_request_id
+		WHERE pr.status = 'OPEN'
+		  AND prr.reviewer_id = $1
+	`
+
+	rows, err := s.db.QueryContext(ctx, query, reviewerID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var ids []string
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		ids = append(ids, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return ids, nil
 }
