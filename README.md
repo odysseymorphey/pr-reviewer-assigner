@@ -21,7 +21,7 @@ export CONFIG_PATH=your/config/path.json
 - Go 1.25
 - PostgreSQL 15+
 
-### Makefile цели
+### Makefile
 - `make build` - собирает бинарь `prservice`.
 - `make test` - запускает `go test ./...`.
 - `make lint` - после установки `golangci-lint` запускает линтеры (не забудьте поправить имя бинаря при необходимости).
@@ -37,7 +37,7 @@ make up
 Сценарий `k6/scripts/test.js` генерирует 5 RPS и проверяет SLI времени ответа - 300мс, SLI успешности  99.9%. Запускается автоматически, когда поднимается compose. \
 Ручной запуск:
 ```bash
-# требуется апнутый docker-comopse
+# требуется апнутый docker-compose
 make loadtest
 ```
 Результаты тестирования можно лицезреть в виде красивого дашборда, лежащего по пути `./k6/reports/dashboard.html`
